@@ -91,6 +91,7 @@ from awscli.customizations.dynamodb import register_dynamodb_paginator_fix
 
 
 def awscli_initialize(event_handlers):
+    print(f" Inside awscli_initialize in handlers.py {event_handlers}")
     event_handlers.register('session-initialized', register_uri_param_handler)
     param_shorthand = ParamShorthandParser()
     event_handlers.register('process-cli-arg', param_shorthand)

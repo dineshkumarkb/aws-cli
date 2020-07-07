@@ -40,6 +40,7 @@ class AliasLoader(object):
         """
         self._filename = alias_filename
         self._aliases = None
+        print(f" The alias file name is {self._filename}")
 
     def _build_aliases(self):
         self._aliases = self._load_aliases()
@@ -77,8 +78,10 @@ class AliasCommandInjector(object):
         self._alias_loader = alias_loader
 
     def inject_aliases(self, command_table, parser):
+        print(f" Inside inject aliases ")
         for alias_name, alias_value in \
                 self._alias_loader.get_aliases().items():
+            print(f" alias name and values are {alias_name},{alias_value}")
             if alias_value.startswith('!'):
                 alias_cmd = ExternalAliasCommand(alias_name, alias_value)
             else:
@@ -91,9 +94,11 @@ class AliasCommandInjector(object):
                 # to clobber as a possible reference that it will
                 # need to proxy to.
                 if alias_name in command_table:
+                    print(f" alias name in command table {command_table[alias_name]}")
                     service_alias_cmd_args.append(
                         command_table[alias_name])
                 alias_cmd = ServiceAliasCommand(*service_alias_cmd_args)
+                print(f" The alias command is {alias_cmd}")
             command_table[alias_name] = alias_cmd
 
 

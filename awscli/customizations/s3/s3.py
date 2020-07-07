@@ -26,6 +26,7 @@ def awscli_initialize(cli):
     This function is necessary to install the plugin using a configuration
     file
     """
+    print(f" Inside s3 awscli_initialize {cli} ")
     cli.register("building-command-table.main", add_s3)
     cli.register('building-command-table.sync', register_sync_strategies)
 
@@ -35,6 +36,7 @@ def s3_plugin_initialize(event_handlers):
     This is a wrapper to make the plugin built-in to the cli as opposed
     to specifiying it in the configuration file.
     """
+    print(f" Inside s3 s3_plugin_initialize ")
     awscli_initialize(event_handlers)
 
 
@@ -43,6 +45,7 @@ def add_s3(command_table, session, **kwargs):
     This creates a new service object for the s3 plugin.  It sends the
     old s3 commands to the namespace ``s3api``.
     """
+    print(f" Inside add_s3 ")
     utils.rename_command(command_table, 's3', 's3api')
     command_table['s3'] = S3(session)
 
@@ -64,6 +67,7 @@ class S3(BasicCommand):
     ]
 
     def _run_main(self, parsed_args, parsed_globals):
+        print(f" Inside _run_main s3 ")
         if parsed_args.subcommand is None:
             raise ValueError("usage: aws [options] <command> <subcommand> "
                              "[parameters]\naws: error: too few arguments")

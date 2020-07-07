@@ -311,6 +311,7 @@ class ProviderHelpCommand(HelpCommand):
         return self._subcommand_table
 
     def _create_subcommand_table(self):
+        print(" Inside ProviderHelpCommand class _create_subcommand_table method ")
         subcommand_table = {}
         # Add the ``aws help topics`` command to the ``topic_table``
         topic_lister_command = TopicListerCommand(self.session)
@@ -336,6 +337,7 @@ class ServiceHelpCommand(HelpCommand):
 
     def __init__(self, session, obj, command_table, arg_table, name,
                  event_class):
+        print(f" ServiceHelpCommand init method ")
         super(ServiceHelpCommand, self).__init__(session, obj, command_table,
                                                  arg_table)
         self._name = name

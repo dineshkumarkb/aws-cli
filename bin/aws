@@ -20,6 +20,7 @@ import awscli.clidriver
 
 
 def main():
+    print(" Inside aws main ")
     return awscli.clidriver.main()
 
 

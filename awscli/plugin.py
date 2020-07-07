@@ -39,25 +39,34 @@ def load_plugins(plugin_mapping, event_hooks=None, include_builtins=True):
     :return: An event emitter object.
 
     """
+    print(" Inside load plugins ")
+    print(f" The plugin mapping values are {plugin_mapping} ")
     if include_builtins:
+        print(f" Builtin plugins included {BUILTIN_PLUGINS} ")
         plugin_mapping.update(BUILTIN_PLUGINS)
     modules = _import_plugins(plugin_mapping)
+    print(f" The modules are {modules} ")
     if event_hooks is None:
         event_hooks = HierarchicalEmitter()
     for name, plugin in zip(plugin_mapping.keys(), modules):
+        print(f" The name and plugin is {name},{plugin}")
         log.debug("Initializing plugin %s: %s", name, plugin)
         plugin.awscli_initialize(event_hooks)
+    print(f" The event hooks are {event_hooks} ")
     return event_hooks
 
 
 def _import_plugins(plugin_names):
     plugins = []
     for name, path in plugin_names.items():
+        print(f" The plugin name and path are {name},{path}")
         log.debug("Importing plugin %s: %s", name, path)
         if '.' not in path:
             plugins.append(__import__(path))
         else:
             package, module = path.rsplit('.', 1)
+            print(f" The package and modules are {package},{module}")
             module = __import__(path, fromlist=[module])
             plugins.append(module)
+    print(f" The final plugins list is {plugins} ")
     return plugins

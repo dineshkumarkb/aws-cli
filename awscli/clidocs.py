@@ -28,6 +28,7 @@ LOG = logging.getLogger(__name__)
 class CLIDocumentEventHandler(object):
 
     def __init__(self, help_command):
+        print(f" CLIDocumentEventHandler {help_command} ")
         self.help_command = help_command
         self.register(help_command.session, help_command.event_class)
         self._arg_groups = self._build_arg_table_groups(help_command)
@@ -47,6 +48,7 @@ class CLIDocumentEventHandler(object):
 
     def _map_handlers(self, session, event_class, mapfn):
         for event in DOC_EVENTS:
+            print(f" The event is {event} ")
             event_handler_name = event.replace('-', '_')
             if hasattr(self, event_handler_name):
                 event_handler = getattr(self, event_handler_name)

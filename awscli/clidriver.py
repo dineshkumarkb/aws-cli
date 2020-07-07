@@ -65,56 +65,73 @@ u''.encode('idna')
 
 
 def main():
+    print(" Inside main before creating cli driver ")
     driver = create_clidriver()
+    print(f" The driver in main function {driver}")
     rc = driver.main()
+    print(f"rc is {rc}")
     HISTORY_RECORDER.record('CLI_RC', rc, 'CLI')
     return rc
 
 
 def create_clidriver():
+    print(" Inside clidriver ")
     session = botocore.session.Session(EnvironmentVariables)
+    print(f" The session is {session} ")
     _set_user_agent_for_session(session)
     load_plugins(session.full_config.get('plugins', {}),
                  event_hooks=session.get_component('event_emitter'))
     driver = CLIDriver(session=session)
+    print(f" The driver object is {driver}")
     return driver
 
 
 def _set_user_agent_for_session(session):
+    print(f"Setting user agent {session}")
     session.user_agent_name = 'aws-cli'
     session.user_agent_version = __version__
     session.user_agent_extra = 'botocore/%s' % botocore_version
+    print(f" session user agent {session.user_agent_extra}")
+
 
 
 class CLIDriver(object):
 
     def __init__(self, session=None):
         if session is None:
+            print(f" The environment variables for None session are {EnvironmentVariables}")
             self.session = botocore.session.get_session(EnvironmentVariables)
             _set_user_agent_for_session(self.session)
         else:
+            print(f" Session in else {session}")
             self.session = session
         self._cli_data = None
         self._command_table = None
         self._argument_table = None
         self.alias_loader = AliasLoader()
+        print(f" alias loader is {self.alias_loader}")
 
     def _get_cli_data(self):
+        print(f" Inside _get_cli_data ")
         # Not crazy about this but the data in here is needed in
         # several places (e.g. MainArgParser, ProviderHelp) so
         # we load it here once.
         if self._cli_data is None:
             self._cli_data = self.session.get_data('cli')
+        print(f" the cli data is {self._cli_data}")
         return self._cli_data
 
     def _get_command_table(self):
         if self._command_table is None:
+            print(f" Inside _get_command_table ")
             self._command_table = self._build_command_table()
         return self._command_table
 
     def _get_argument_table(self):
+        print(f" Inside _get_argument_table ")
         if self._argument_table is None:
             self._argument_table = self._build_argument_table()
+        #print(f" The argument table is {self._argument_table}")
         return self._argument_table
 
     def _build_command_table(self):
@@ -125,6 +142,7 @@ class CLIDriver(object):
         :return: The parser object
 
         """
+        print(f" Building built in commands ")
         command_table = self._build_builtin_commands(self.session)
         self.session.emit('building-command-table.main',
                           command_table=command_table,
@@ -135,23 +153,29 @@ class CLIDriver(object):
     def _build_builtin_commands(self, session):
         commands = OrderedDict()
         services = session.get_available_services()
+        #print(f" The available services are {services}")
         for service_name in services:
+            #print(f" Creating ServiceCommand object for {service_name}")
             commands[service_name] = ServiceCommand(cli_name=service_name,
                                                     session=self.session,
                                                     service_name=service_name)
+        #print(f"commands are {commands} ")
         return commands
 
     def _add_aliases(self, command_table, parser):
         parser = self._create_parser(command_table)
+        print(f" Creating alias command injector ")
         injector = AliasCommandInjector(
             self.session, self.alias_loader)
         injector.inject_aliases(command_table, parser)
 
     def _build_argument_table(self):
+        print(f" Inside _build_argument_table ")
         argument_table = OrderedDict()
         cli_data = self._get_cli_data()
         cli_arguments = cli_data.get('options', None)
         for option in cli_arguments:
+            print(f" The option in cli_arguments {option}")
             option_params = copy_kwargs(cli_arguments[option])
             cli_argument = self._create_cli_argument(option, option_params)
             cli_argument.add_to_arg_table(argument_table)
@@ -162,6 +186,7 @@ class CLIDriver(object):
         return argument_table
 
     def _create_cli_argument(self, option_name, option_params):
+        print(f" Inside _create_cli_argument option_name {option_name}, option_params {option_params}")
         return CustomArgument(
             option_name, help_text=option_params.get('help', ''),
             dest=option_params.get('dest'),
@@ -172,7 +197,10 @@ class CLIDriver(object):
             cli_type_name=option_params.get('type'))
 
     def create_help_command(self):
+        print("Creating help command")
         cli_data = self._get_cli_data()
+        #print(f" The cli data is {cli_data}")
+        print(f" Creating Provider Help Command instance ")
         return ProviderHelpCommand(self.session, self._get_command_table(),
                                    self._get_argument_table(),
                                    cli_data.get('description', None),
@@ -181,8 +209,10 @@ class CLIDriver(object):
 
     def _create_parser(self, command_table):
         # Also add a 'help' command.
+        #print(f" command table inside create parser {command_table}")
         command_table['help'] = self.create_help_command()
         cli_data = self._get_cli_data()
+        print(f"Session user agent for MainArgParser {self.session.user_agent()}")
         parser = MainArgParser(
             command_table, self.session.user_agent(),
             cli_data.get('description', None),
@@ -200,10 +230,14 @@ class CLIDriver(object):
         """
         if args is None:
             args = sys.argv[1:]
+            print(f"None args {args}")
         command_table = self._get_command_table()
+        #print(f"Command table is {command_table}")
         parser = self._create_parser(command_table)
+        #print(f" Parser is {parser} ")
         self._add_aliases(command_table, parser)
         parsed_args, remaining = parser.parse_known_args(args)
+        print(f" Parsed args {parsed_args}, remaining args {remaining}")
         try:
             # Because _handle_top_level_args emits events, it's possible
             # that exceptions can be raised, which should have the same
@@ -248,6 +282,7 @@ class CLIDriver(object):
         # problematic because if something in CLIDriver caused the
         # session components to be reset (such as session.profile = foo)
         # then all the prior registered components would be removed.
+        print(f"emit session event {parsed_args}")
         self.session.emit(
             'session-initialized', session=self.session,
             parsed_args=parsed_args)
@@ -258,6 +293,7 @@ class CLIDriver(object):
         sys.stderr.write('\n')
 
     def _handle_top_level_args(self, args):
+        print(f" handling top level args {args} ")
         emit_top_level_args_parsed_event(self.session, args)
         if args.profile:
             self.session.set_config_variable('profile', args.profile)
@@ -304,64 +340,81 @@ class ServiceCommand(CLICommand):
         # we want users/external things to be able to rename the cli name
         # but *not* the service name, as this has to be exactly what
         # botocore expects.
+        #print(f" Inside service command class ")
         self._name = cli_name
         self.session = session
         self._command_table = None
         if service_name is None:
             # Then default to using the cli name.
+            #print(f"service name in if is None.{cli_name}")
             self._service_name = cli_name
         else:
             self._service_name = service_name
+            #print(f"Service name in else is {self._service_name}")
         self._lineage = [self]
         self._service_model = None
 
     @property
     def name(self):
+        print(f" Returning name in ServiceCommand class {self._name}")
         return self._name
 
     @name.setter
     def name(self, value):
+        print(f" Setting name in ServiceCommand class {value}, old name {self._name}")
         self._name = value
 
     @property
     def service_model(self):
+        print(f" Getting Service model in ServiceCommand class {self._get_service_model()}")
         return self._get_service_model()
 
     @property
     def lineage(self):
+        print(f" Returning lineage in ServiceCommand class {self._lineage}")
         return self._lineage
 
     @lineage.setter
     def lineage(self, value):
+        print(f" Setting lineage in ServiceCommand class {value}")
         self._lineage = value
 
     def _get_command_table(self):
         if self._command_table is None:
+            print(f" Inside _get_command_table calling _create_command_table ")
             self._command_table = self._create_command_table()
         return self._command_table
 
     def _get_service_model(self):
+        print(f" Inside _get_service_model")
         if self._service_model is None:
             api_version = self.session.get_config_variable('api_versions').get(
                 self._service_name, None)
+            print(f" api version in {api_version}")
             self._service_model = self.session.get_service_model(
                 self._service_name, api_version=api_version)
+            print(f" Service model is {self._service_model}")
         return self._service_model
 
     def __call__(self, args, parsed_globals):
         # Once we know we're trying to call a service for this operation
         # we can go ahead and create the parser for it.  We
         # can also grab the Service object from botocore.
+        print(f"Service Command __call__ function")
         service_parser = self._create_parser()
         parsed_args, remaining = service_parser.parse_known_args(args)
         command_table = self._get_command_table()
         return command_table[parsed_args.operation](remaining, parsed_globals)
 
     def _create_command_table(self):
+        print(f" Inside ServiceCommand _create_command_table ")
         command_table = OrderedDict()
         service_model = self._get_service_model()
+        print(f" The service model is {service_model} ")
         for operation_name in service_model.operation_names:
             cli_name = xform_name(operation_name, '-')
+            print(f"cli_name is {cli_name}")
+
             operation_model = service_model.operation_model(operation_name)
             command_table[cli_name] = ServiceOperation(
                 name=cli_name,
@@ -436,6 +489,7 @@ class ServiceOperation(object):
         :param session: The session object.
 
         """
+        print(f" Inside ServiceOperation class ")
         self._arg_table = None
         self._name = name
         # These is used so we can figure out what the proper event
