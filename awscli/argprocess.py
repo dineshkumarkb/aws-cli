@@ -274,6 +274,7 @@ class ParamShorthand(object):
 class ParamShorthandParser(ParamShorthand):
 
     def __init__(self):
+        print(f" Inside ParamShorthandParser ")
         self._parser = shorthand.ShorthandParser()
         self._visitor = shorthand.BackCompatVisitor()
 
@@ -304,7 +305,7 @@ class ParamShorthandParser(ParamShorthand):
             be raised.
 
         """
-
+        print(f" Inside shorthandparser call object ")
         if not self._should_parse_as_shorthand(cli_argument, value):
             return
         else:
@@ -342,6 +343,7 @@ class ParamShorthandParser(ParamShorthand):
             # this, ParamErrors are caught and reraised with the cli_name
             # injected.
             raise ParamError(cli_argument.cli_name, str(e))
+        print(f" The parsed value is {parsed}")
         return parsed
 
     def _handle_special_cases(self, cli_argument, value, service_id,

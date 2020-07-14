@@ -303,6 +303,7 @@ class OperationDocumentEventHandler(CLIDocumentEventHandler):
     AWS_DOC_BASE = 'https://docs.aws.amazon.com/goto/WebAPI'
 
     def doc_description(self, help_command, **kwargs):
+        print(f" Inside OperationDocumentEventHandler doc desc {help_command}")
         doc = help_command.doc
         operation_model = help_command.obj
         doc.style.h2('Description')

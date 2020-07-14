@@ -436,6 +436,7 @@ class ServiceCommand(CLICommand):
             command_obj.lineage = self.lineage + [command_obj]
 
     def create_help_command(self):
+        print(f" Inside service command create_help_command ")
         command_table = self._get_command_table()
         return ServiceHelpCommand(session=self.session,
                                   obj=self._get_service_model(),

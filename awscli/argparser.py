@@ -133,7 +133,9 @@ class MainArgParser(CLIArgParser):
         return help_str
 
     def _build(self, command_table, version_string, argument_table):
+        print(" Inside build method of MainArgParser ")
         for argument_name in argument_table:
+            print(f" The argument name is {argument_name} ")
             argument = argument_table[argument_name]
             argument.add_to_parser(self)
         self.add_argument('--version', action="version",
